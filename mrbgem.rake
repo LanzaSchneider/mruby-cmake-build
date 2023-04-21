@@ -62,6 +62,8 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
 
     # build mrbconf.h
     f << <<~EOF
+    file(GLOB MRB_HEADERS #{MRUBY_ROOT}/include/*)
+    file(COPY ${MRB_HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
     file(GLOB MRB_HEADERS #{build.build_dir}/include/*)
     file(COPY ${MRB_HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
     file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.origin.h)
