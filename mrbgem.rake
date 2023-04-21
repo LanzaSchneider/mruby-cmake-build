@@ -3,7 +3,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
   spec.author  = 'Lanza Schneider'
   spec.summary = 'CMakeLists.txt configuration generator for mruby'
 
-  def srcfile(obj)
+  def srcfile obj
     src = obj.ext
     original_srcs = Dir.glob("#{"#{MRUBY_ROOT}/#{obj.relative_path_from(build.build_dir)}".ext}.c**")
     original_srcs.empty? ? "#{src}.c**" : original_srcs[0]
@@ -30,6 +30,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     end
     f.puts 'file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h "#include \\"mrbconf.origin.h\\"\\n")'
 
+    # build libmruby_core
     f.puts "set(MRB_CORE_SOURCES "")"
     libmruby_core_srcs.flatten.each do |src|
       if src.end_with?('*')
@@ -39,12 +40,9 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
         f.puts "set(MRB_CORE_SOURCES ${MRB_CORE_SOURCES};#{src})"
       end
     end
+    f.puts "add_library(mruby_core STATIC ${MRB_CORE_SOURCES})"
 
-    f << <<~EOF
-    add_library(mruby_core STATIC ${MRB_CORE_SOURCES})
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-    EOF
-
+    # build libmruby
     f.puts "set(MRB_SOURCES "")"
     libmruby_srcs.flatten.each do |src|
       if src.end_with?('*')
@@ -54,10 +52,14 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
         f.puts "set(MRB_SOURCES ${MRB_SOURCES};#{src})"
       end
     end
+    f.puts "add_library(mruby STATIC ${MRB_SOURCES})"
 
-    f << <<~EOF
-    add_library(mruby STATIC ${MRB_SOURCES})
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-    EOF
+    # give include
+    f.puts "include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)"
+    build.gems.each do |gem|
+      gem.export_include_paths.flatten.each do |include_path|
+        f.puts "include_directories(#{include_path})"
+      end
+    end
   end
 end
