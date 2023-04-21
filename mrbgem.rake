@@ -20,12 +20,20 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     project(mruby)
     EOF
 
+    # build mrbconf.h
     f << <<~EOF
     file(GLOB MRB_HEADERS #{build.build_dir}/include/*)
     file(COPY ${MRB_HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
     file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.origin.h)
     EOF
-    build.cc.defines.each do |define|
+    mrbconf_defines = []
+    mrbconf_defines += build.defines
+    build.gems.each do |gem|
+      gem.compilers.each do |compiler|
+        mrbconf_defines += compiler.defines
+      end
+    end
+    mrbconf_defines.uniq.each do |define|
       f.puts "file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define}\\n\")"
     end
     f.puts 'file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h "#include \\"mrbconf.origin.h\\"\\n")'
