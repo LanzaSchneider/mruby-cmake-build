@@ -3,17 +3,57 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
   spec.author  = 'Lanza Schneider'
   spec.summary = 'CMakeLists.txt configuration generator for mruby'
 
+  # source filepath detector
   def srcfile obj
     src = obj.ext
     original_srcs = Dir.glob("#{"#{MRUBY_ROOT}/#{obj.relative_path_from(build.build_dir)}".ext}.c**")
     original_srcs.empty? ? "#{src}.c**" : original_srcs[0]
   end
 
+  # prebuilt sources
   libmruby_core_srcs = build.libmruby_core_objs.flatten.collect{|obj|srcfile(obj)}
   libmruby_srcs = build.libmruby_objs.flatten.collect{|obj|srcfile(obj)}
 
+  # cmakelists prepare
   cmake_target_dir = "#{build.build_dir}/cmake"
   mkdir_p cmake_target_dir
+
+  # parse mrbconf.h
+  mrbconf_options = {}
+  File.open "#{MRUBY_ROOT}/include/mrbconf.h", 'r' do |f|
+    tip = ''
+    last_line_define = nil
+    while !f.eof?
+      line = f.readline.strip
+      if line.empty? || (line.include?('#') && !line.include?('#define'))
+        tip = ''
+        last_line_define = nil
+        next
+      elsif line.include?('#define')
+        if tip.strip.empty? && last_line_define.nil?
+          tip = ''
+          last_line_define = nil
+          next
+        end
+        option = line.split('#define ')[1].split(' ')
+        default = nil
+        if option[1] && !(option[1].include?('*') || option[1].include?('//'))
+          default = option[1]
+        end
+        mrbconf_options[option[0]] = 
+        {
+          :tip => tip,
+          :default => default,
+        }
+        last_line_define = line
+        next
+      end
+      tip << "#{line.sub('/*', '').sub('*/', '').strip}\\n"
+      last_line_define = nil
+    end
+  end
+
+  # cmakelists generation
   File.open "#{cmake_target_dir}/CMakeLists.txt", 'w' do |f|
     f << <<~EOF
     cmake_minimum_required(VERSION 3.3)
@@ -31,6 +71,21 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     build.gems.each do |gem|
       gem.compilers.each do |compiler|
         mrbconf_defines += compiler.defines
+      end
+    end
+    mrbconf_options.each_pair do |define, args|
+      if args[:default]
+        f << <<~EOF
+        set(#{define} "#{args[:default]}" CACHE STRING "#{args[:tip]}")
+        file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define} #{args[:default]}\\n\")
+        EOF
+      else
+        f << <<~EOF
+        option(#{define} "#{args[:tip]}" OFF)
+        if (#{define})
+          file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define}\\n\")
+        endif()
+        EOF
       end
     end
     mrbconf_defines.uniq.each do |define|
