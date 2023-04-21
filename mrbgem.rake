@@ -72,6 +72,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     mrbconf_defines += build.defines
     build.gems.each do |gem|
       gem.compilers.each do |compiler|
+        next if compiler.nil?
         mrbconf_defines += compiler.defines
       end
     end
@@ -122,6 +123,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     # give include
     f.puts "include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)"
     build.gems.each do |gem|
+      next if gem.export_include_paths.nil?
       gem.export_include_paths.flatten.each do |include_path|
         f.puts "include_directories(#{include_path})"
       end
