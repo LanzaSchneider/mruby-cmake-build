@@ -10,10 +10,22 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     original_srcs.empty? ? "#{src}.c**" : original_srcs[0]
   end
 
+  # setup all mrbgems
+  build.gems.each(&:setup)
+  gems = build.gems.check(build)
+
   # prebuilt sources
   libmruby_core_srcs = build.libmruby_core_objs.flatten.collect{|obj|srcfile(obj)}
+  libmruby_core_srcs.uniq!
   libmruby_srcs = build.libmruby_objs.flatten.collect{|obj|srcfile(obj)}
+  gems.each do |gem|
+    next if gem.objs.nil?
+    gem_real_dir = gem.dir
+    libmruby_srcs += gem.objs.flatten.collect{|obj|srcfile(obj)}
+    libmruby_srcs += gem.objs.flatten.collect{|obj|srcfile(obj.sub(gem.build_dir, gem_real_dir))}
+  end
   libmruby_srcs << "#{build.build_dir}/mrbgems/gem_init.c"
+  libmruby_srcs.uniq!
 
   # cmakelists prepare
   cmake_target_dir = "#{build.build_dir}/cmake"
@@ -71,7 +83,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     EOF
     mrbconf_defines = []
     mrbconf_defines += build.defines
-    build.gems.each do |gem|
+    gems.each do |gem|
       gem.compilers.each do |compiler|
         next if compiler.nil?
         mrbconf_defines += compiler.defines
@@ -93,7 +105,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
       end
     end
     mrbconf_defines.uniq.each do |define|
-      f.puts "file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define}\\n\")"
+      f.puts "file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define.sub('=', ' ')}\\n\")"
     end
     f.puts 'file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h "#include \\"mrbconf.origin.h\\"\\n")'
 
@@ -125,7 +137,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
 
     # give include
     f.puts "include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)"
-    build.gems.each do |gem|
+    gems.each do |gem|
       next if gem.export_include_paths.nil?
       gem.export_include_paths.flatten.each do |include_path|
         f.puts "include_directories(#{include_path})"
