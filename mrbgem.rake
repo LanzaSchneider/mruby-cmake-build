@@ -97,27 +97,29 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     f.puts 'file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h "#include \\"mrbconf.origin.h\\"\\n")'
 
     # build libmruby_core
-    f.puts "set(MRB_CORE_SOURCES "")"
+    f.puts "set(SOURCES "")"
     libmruby_core_srcs.flatten.each do |src|
       if src.end_with?('*')
-        f.puts "file(GLOB MRB_CORE_SOURCE #{src})"
-        f.puts "set(MRB_CORE_SOURCES ${MRB_CORE_SOURCES};${MRB_CORE_SOURCE})"
+        f.puts "file(GLOB SOURCE #{src})"
+        f.puts "set(SOURCES ${SOURCES};${SOURCE})"
       else
-        f.puts "set(MRB_CORE_SOURCES ${MRB_CORE_SOURCES};#{src})"
+        f.puts "set(SOURCES ${SOURCES};#{src})"
       end
     end
+    f.puts "set(MRB_CORE_SOURCES ${SOURCES} CACHE STRING \"libmruby_core sources\")"
     f.puts "add_library(mruby_core STATIC ${MRB_CORE_SOURCES})"
 
     # build libmruby
-    f.puts "set(MRB_SOURCES "")"
-    libmruby_srcs.flatten.each do |src|
+    f.puts "set(SOURCES "")"
+    libmruby_core_srcs.flatten.each do |src|
       if src.end_with?('*')
-        f.puts "file(GLOB MRB_SOURCE #{src})"
-        f.puts "set(MRB_SOURCES ${MRB_SOURCES};${MRB_SOURCE})"
+        f.puts "file(GLOB SOURCE #{src})"
+        f.puts "set(SOURCES ${SOURCES};${SOURCE})"
       else
-        f.puts "set(MRB_SOURCES ${MRB_SOURCES};#{src})"
+        f.puts "set(SOURCES ${SOURCES};#{src})"
       end
     end
+    f.puts "set(MRB_SOURCES ${SOURCES} CACHE STRING \"libmruby sources\")"
     f.puts "add_library(mruby STATIC ${MRB_SOURCES})"
 
     # give include
