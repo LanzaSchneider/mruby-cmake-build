@@ -111,7 +111,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
 
     # build libmruby
     f.puts "set(SOURCES "")"
-    libmruby_core_srcs.flatten.each do |src|
+    libmruby_srcs.flatten.each do |src|
       if src.end_with?('*')
         f.puts "file(GLOB SOURCE #{src})"
         f.puts "set(SOURCES ${SOURCES};${SOURCE})"
