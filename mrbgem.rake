@@ -13,6 +13,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
   # prebuilt sources
   libmruby_core_srcs = build.libmruby_core_objs.flatten.collect{|obj|srcfile(obj)}
   libmruby_srcs = build.libmruby_objs.flatten.collect{|obj|srcfile(obj)}
+  libmruby_srcs << "#{build.build_dir}/mrbgems/gem_init.c"
 
   # cmakelists prepare
   cmake_target_dir = "#{build.build_dir}/cmake"
