@@ -121,6 +121,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     end
     f.puts "set(MRB_CORE_SOURCES ${SOURCES} CACHE STRING \"libmruby_core sources\")"
     f.puts "add_library(mruby_core STATIC ${MRB_CORE_SOURCES})"
+	f.puts "set_property(TARGET mruby_core PROPERTY POSITION_INDEPENDENT_CODE ON)"
 
     # build libmruby
     f.puts "set(SOURCES "")"
@@ -134,6 +135,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     end
     f.puts "set(MRB_SOURCES ${SOURCES} CACHE STRING \"libmruby sources\")"
     f.puts "add_library(mruby STATIC ${MRB_SOURCES})"
+	f.puts "set_property(TARGET mruby PROPERTY POSITION_INDEPENDENT_CODE ON)"
 
     # give include
     f.puts "include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)"
