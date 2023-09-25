@@ -135,14 +135,15 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     end
     f.puts "set(MRB_SOURCES ${SOURCES} CACHE STRING \"libmruby sources\")"
     f.puts "add_library(mruby STATIC ${MRB_SOURCES})"
-	f.puts "set_property(TARGET mruby PROPERTY POSITION_INDEPENDENT_CODE ON)"
+	  f.puts "set_property(TARGET mruby PROPERTY POSITION_INDEPENDENT_CODE ON)"
 
     # give include
-    f.puts "include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)"
+    f.puts "target_include_directories(mruby_core PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)"
+    f.puts "target_include_directories(mruby PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)"
     gems.each do |gem|
       next if gem.export_include_paths.nil?
       gem.export_include_paths.flatten.each do |include_path|
-        f.puts "include_directories(#{include_path})"
+        f.puts "target_include_directories(mruby PUBLIC $<BUILD_INTERFACE:${#{include_path}>)"
       end
     end
   end
