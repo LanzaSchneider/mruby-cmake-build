@@ -143,7 +143,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     gems.each do |gem|
       next if gem.export_include_paths.nil?
       gem.export_include_paths.flatten.each do |include_path|
-        f.puts "target_include_directories(mruby PUBLIC $<BUILD_INTERFACE:${#{include_path}>)"
+        f.puts "target_include_directories(mruby PUBLIC $<BUILD_INTERFACE:#{include_path}>)"
       end
     end
   end
