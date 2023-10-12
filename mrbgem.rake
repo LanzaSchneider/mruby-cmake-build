@@ -92,8 +92,8 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
     mrbconf_options.each_pair do |define, args|
       if args[:default]
         f << <<~EOF
-        set(#{define} "#{args[:default]}" CACHE STRING "#{args[:tip]}")
-        file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define} #{args[:default]}\\n\")
+        set(#{define} "#{args[:default]}" CACHE STRING "#{args[:tip]}" FORCE)
+        file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/mrbconf.h \"#define #{define} ${#{define}}\\n\")
         EOF
       else
         f << <<~EOF
@@ -119,7 +119,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
         f.puts "set(SOURCES ${SOURCES};#{src})"
       end
     end
-    f.puts "set(MRB_CORE_SOURCES ${SOURCES} CACHE STRING \"libmruby_core sources\")"
+    f.puts "set(MRB_CORE_SOURCES ${SOURCES} CACHE STRING \"libmruby_core sources\" FORCE)"
     f.puts "add_library(mruby_core STATIC ${MRB_CORE_SOURCES})"
 	f.puts "set_property(TARGET mruby_core PROPERTY POSITION_INDEPENDENT_CODE ON)"
 
@@ -133,7 +133,7 @@ MRuby::Gem::Specification.new('mruby-cmake-build') do |spec|
         f.puts "set(SOURCES ${SOURCES};#{src})"
       end
     end
-    f.puts "set(MRB_SOURCES ${SOURCES} CACHE STRING \"libmruby sources\")"
+    f.puts "set(MRB_SOURCES ${SOURCES} CACHE STRING \"libmruby sources\" FORCE)"
     f.puts "add_library(mruby STATIC ${MRB_SOURCES})"
 	  f.puts "set_property(TARGET mruby PROPERTY POSITION_INDEPENDENT_CODE ON)"
 
